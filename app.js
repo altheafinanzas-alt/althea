@@ -351,10 +351,24 @@ function renderTeam(teamKey) {
 
 function cap(str) { return str ? str.charAt(0).toUpperCase() + str.slice(1) : ''; }
 
+// Formato unificado de fecha en toda la app: dd/mm/aa (año en 2 dígitos).
 function formatDate(d) {
   if (!d) return '';
   const [y, m, day] = d.split('-');
-  return `${day}/${m}/${y}`;
+  return `${day}/${m}/${y.slice(-2)}`;
+}
+
+// Convierte una fecha dd/mm/aa o dd/mm/aaaa (como la escribe una persona o
+// como queda en un CSV exportado) al formato ISO yyyy-mm-dd que usa la base.
+function parseDateToIso(str) {
+  if (!str) return '';
+  const s = str.toString().trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s; // ya viene en ISO
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/);
+  if (!m) return '';
+  const [, dd, mm, yy] = m;
+  let year = yy.length === 2 ? (parseInt(yy, 10) <= 68 ? '20' + yy : '19' + yy) : yy;
+  return `${year}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
 }
 
 // --- Sub-tabs sync ---
@@ -463,7 +477,9 @@ function populateAsesorSelect(team, selected) {
 async function saveClient() {
   const nombre = document.getElementById('field-nombre').value.trim();
   const apellido = document.getElementById('field-apellido').value.trim();
+  const fecha = document.getElementById('field-fecha').value;
   if (!nombre || !apellido) { alert('Nombre y apellido son obligatorios.'); return; }
+  if (!fecha) { alert('La fecha de apertura de cuenta es obligatoria.'); return; }
 
   const existing = state.editingId ? state.clients.find(c => c.id === state.editingId) : null;
 
@@ -472,7 +488,7 @@ async function saveClient() {
     team: state.currentTeam,
     nombre,
     apellido,
-    fecha: document.getElementById('field-fecha').value,
+    fecha,
     comitente: document.getElementById('field-comitente').value.trim(),
     asesor: document.getElementById('field-asesor').value,
     asesorOriginal: existing
@@ -537,7 +553,7 @@ const CSV_COLUMNS = [
   { header: 'Comitente', key: 'comitente' },
   { header: 'Nombre', key: 'nombre' },
   { header: 'Apellido', key: 'apellido' },
-  { header: 'Fecha apertura (AAAA-MM-DD)', key: 'fecha' },
+  { header: 'Fecha apertura (DD/MM/AA)', key: 'fecha', date: true },
   { header: 'Asesor', key: 'asesor' },
   { header: 'Reasignacion', key: 'reasignacion' },
   { header: 'Perfil', key: 'perfil' },
@@ -559,7 +575,7 @@ function exportTeamCsv(team) {
     const row = {};
     CSV_COLUMNS.forEach(col => {
       const val = c[col.key];
-      row[col.header] = col.bool ? (val ? 'si' : 'no') : (val || '');
+      row[col.header] = col.bool ? (val ? 'si' : 'no') : col.date ? formatDate(val) : (val || '');
     });
     return row;
   });
@@ -615,7 +631,7 @@ function buildImportPreview(rows) {
     const incoming = {};
     CSV_COLUMNS.forEach(col => {
       const raw = (row[col.header] !== undefined ? row[col.header] : '').toString().trim();
-      incoming[col.key] = col.bool ? csvBoolToJs(raw) : raw;
+      incoming[col.key] = col.bool ? csvBoolToJs(raw) : col.date ? parseDateToIso(raw) : raw;
     });
 
     if (!incoming.nombre && !incoming.apellido && !incoming.comitente) return; // fila vacía
@@ -637,8 +653,8 @@ function buildImportPreview(rows) {
       if (beforeNorm !== afterNorm) {
         changes.push({
           label: col.header,
-          before: col.bool ? (beforeNorm ? 'sí' : 'no') : (beforeNorm || '—'),
-          after: col.bool ? (afterNorm ? 'sí' : 'no') : (afterNorm || '—')
+          before: col.bool ? (beforeNorm ? 'sí' : 'no') : col.date ? (formatDate(beforeNorm) || '—') : (beforeNorm || '—'),
+          after: col.bool ? (afterNorm ? 'sí' : 'no') : col.date ? (formatDate(afterNorm) || '—') : (afterNorm || '—')
         });
       }
     });
