@@ -673,10 +673,18 @@
       <div>
         <div class="panel-title">Mis clientes <span id="count-mis">0 registrados</span></div>
       </div>
-      <button class="btn-add" onclick="openModal('mis-clientes')">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg>
-        Nuevo cliente
-      </button>
+      <div style="display:flex; gap:8px;">
+        <button class="btn-add" style="background:white;border:1px solid var(--border);color:var(--text-secondary);" onclick="exportTeamCsv('mis-clientes')">
+          Exportar CSV
+        </button>
+        <button class="btn-add" style="background:white;border:1px solid var(--border);color:var(--text-secondary);" onclick="triggerImport('mis-clientes')">
+          Importar CSV
+        </button>
+        <button class="btn-add" onclick="openModal('mis-clientes')">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg>
+          Nuevo cliente
+        </button>
+      </div>
     </div>
 
     <div class="sub-tabs" id="subtabs-mis">
@@ -706,6 +714,12 @@
         <div class="panel-title">Equipo Gallo</div>
       </div>
       <div style="display:flex; gap:8px;">
+        <button class="btn-add" style="background:white;border:1px solid var(--border);color:var(--text-secondary);" onclick="exportTeamCsv('equipo-gallo')">
+          Exportar CSV
+        </button>
+        <button class="btn-add" style="background:white;border:1px solid var(--border);color:var(--text-secondary);" onclick="triggerImport('equipo-gallo')">
+          Importar CSV
+        </button>
         <button class="btn-add" style="background:var(--violet);" onclick="openAddAdvisorModal('gallo')">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg>
           Sumar asesor
@@ -745,6 +759,12 @@
         <div class="panel-title">Equipo Fernanda</div>
       </div>
       <div style="display:flex; gap:8px;">
+        <button class="btn-add" style="background:white;border:1px solid var(--border);color:var(--text-secondary);" onclick="exportTeamCsv('equipo-fernanda')">
+          Exportar CSV
+        </button>
+        <button class="btn-add" style="background:white;border:1px solid var(--border);color:var(--text-secondary);" onclick="triggerImport('equipo-fernanda')">
+          Importar CSV
+        </button>
         <button class="btn-add" style="background:var(--violet);" onclick="openAddAdvisorModal('fernanda')">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg>
           Sumar asesor
@@ -969,9 +989,31 @@
   </div>
 </div>
 
+<!-- input oculto para elegir el archivo CSV a importar -->
+<input type="file" id="import-file-input" accept=".csv" style="display:none;" onchange="handleImportFile(event)">
+
+<!-- MODAL VISTA PREVIA DE IMPORTACIÓN -->
+<div class="modal-overlay" id="modal-import">
+  <div class="modal" style="max-width:760px;">
+    <div class="modal-header">
+      <div class="modal-title">Vista previa de importación</div>
+      <button class="modal-close" onclick="closeImportModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="import-summary" style="margin-bottom:16px;font-size:13px;color:var(--text-secondary);"></div>
+      <div id="import-preview" style="display:flex;flex-direction:column;gap:10px;max-height:50vh;overflow-y:auto;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeImportModal()">Cancelar</button>
+      <button class="btn-save" id="btn-confirm-import" onclick="confirmImport()">Confirmar importación</button>
+    </div>
+  </div>
+</div>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="supabase-client.js"></script>
 <script src="app.js"></script>
 </body>

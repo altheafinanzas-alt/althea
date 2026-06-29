@@ -531,6 +531,205 @@ async function saveAdvisor() {
   closeAdvisorModal();
 }
 
+// --- Exportar / Importar CSV ---
+// Columnas del CSV: encabezado visible -> clave interna del cliente.
+const CSV_COLUMNS = [
+  { header: 'Comitente', key: 'comitente' },
+  { header: 'Nombre', key: 'nombre' },
+  { header: 'Apellido', key: 'apellido' },
+  { header: 'Fecha apertura (AAAA-MM-DD)', key: 'fecha' },
+  { header: 'Asesor', key: 'asesor' },
+  { header: 'Reasignacion', key: 'reasignacion' },
+  { header: 'Perfil', key: 'perfil' },
+  { header: 'Reunion', key: 'reunion' },
+  { header: 'Observaciones', key: 'obs' },
+  { header: 'Sub panel', key: 'sub_panel' },
+  { header: 'Asesor original', key: 'asesorOriginal' },
+  { header: 'Derivado (si/no)', key: 'derivado', bool: true },
+  { header: 'Usuario C (si/no)', key: 'usuarioC', bool: true },
+  { header: 'C Ordenes (si/no)', key: 'cOrdenes', bool: true },
+];
+
+function exportTeamCsv(team) {
+  const clients = state.clients.filter(c => c.team === team)
+    .slice()
+    .sort((a, b) => (a.apellido + a.nombre).localeCompare(b.apellido + b.nombre, 'es'));
+
+  const rows = clients.map(c => {
+    const row = {};
+    CSV_COLUMNS.forEach(col => {
+      const val = c[col.key];
+      row[col.header] = col.bool ? (val ? 'si' : 'no') : (val || '');
+    });
+    return row;
+  });
+
+  const csv = Papa.unparse({ fields: CSV_COLUMNS.map(c => c.header), data: rows });
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${team}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+let importState = { team: null, toInsert: [], toUpdate: [] };
+
+function triggerImport(team) {
+  importState.team = team;
+  document.getElementById('import-file-input').value = '';
+  document.getElementById('import-file-input').click();
+}
+
+function csvBoolToJs(v) {
+  const s = (v || '').toString().trim().toLowerCase();
+  return s === 'si' || s === 'sí' || s === 'true' || s === '1';
+}
+
+function handleImportFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  Papa.parse(file, {
+    header: true,
+    skipEmptyLines: true,
+    complete: (results) => {
+      buildImportPreview(results.data);
+    },
+    error: (err) => {
+      alert('Error al leer el CSV: ' + err.message);
+    }
+  });
+}
+
+function buildImportPreview(rows) {
+  const team = importState.team;
+  const toInsert = [];
+  const toUpdate = []; // { existing, incoming, changes: [{label, before, after}] }
+
+  rows.forEach(row => {
+    const incoming = {};
+    CSV_COLUMNS.forEach(col => {
+      const raw = (row[col.header] !== undefined ? row[col.header] : '').toString().trim();
+      incoming[col.key] = col.bool ? csvBoolToJs(raw) : raw;
+    });
+
+    if (!incoming.nombre && !incoming.apellido && !incoming.comitente) return; // fila vacía
+
+    const comitente = (incoming.comitente || '').trim();
+    const existing = comitente ? state.clients.find(c => (c.comitente || '').trim() === comitente) : null;
+
+    if (!existing) {
+      toInsert.push({ team, ...incoming });
+      return;
+    }
+
+    const changes = [];
+    CSV_COLUMNS.forEach(col => {
+      const before = existing[col.key];
+      const after = incoming[col.key];
+      const beforeNorm = col.bool ? !!before : (before || '');
+      const afterNorm = col.bool ? !!after : (after || '');
+      if (beforeNorm !== afterNorm) {
+        changes.push({
+          label: col.header,
+          before: col.bool ? (beforeNorm ? 'sí' : 'no') : (beforeNorm || '—'),
+          after: col.bool ? (afterNorm ? 'sí' : 'no') : (afterNorm || '—')
+        });
+      }
+    });
+
+    if (changes.length > 0) {
+      toUpdate.push({ existing, incoming, changes });
+    }
+  });
+
+  importState.toInsert = toInsert;
+  importState.toUpdate = toUpdate;
+  renderImportPreview();
+  document.getElementById('modal-import').classList.add('open');
+}
+
+function renderImportPreview() {
+  const { toInsert, toUpdate } = importState;
+  const summaryEl = document.getElementById('import-summary');
+  const previewEl = document.getElementById('import-preview');
+  const confirmBtn = document.getElementById('btn-confirm-import');
+
+  summaryEl.textContent = `${toInsert.length} clientes nuevos · ${toUpdate.length} clientes con cambios para actualizar.`;
+  confirmBtn.disabled = (toInsert.length === 0 && toUpdate.length === 0);
+
+  if (toInsert.length === 0 && toUpdate.length === 0) {
+    previewEl.innerHTML = `<div class="empty-state"><div class="icon">📋</div><div>No hay clientes nuevos ni cambios para importar.</div></div>`;
+    return;
+  }
+
+  let html = '';
+
+  toInsert.forEach(c => {
+    html += `
+      <div class="client-card" style="cursor:default;">
+        <div class="client-info">
+          <div class="client-name">${c.apellido || ''}, ${c.nombre || ''} <span class="badge badge-propio" style="margin-left:6px;">Nuevo</span></div>
+          <div class="client-meta"><span class="meta-item"><strong>Comitente:</strong> ${c.comitente || '—'}</span></div>
+        </div>
+      </div>`;
+  });
+
+  toUpdate.forEach(({ existing, changes }) => {
+    const changesHtml = changes.map(ch =>
+      `<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;"><strong>${ch.label}:</strong> ${ch.before} → ${ch.after}</div>`
+    ).join('');
+    html += `
+      <div class="client-card" style="cursor:default;flex-direction:column;align-items:flex-start;">
+        <div class="client-name">${existing.apellido}, ${existing.nombre} <span class="badge badge-reasignado" style="margin-left:6px;">Actualizar</span></div>
+        <div class="client-meta" style="margin-bottom:2px;"><span class="meta-item"><strong>Comitente:</strong> ${existing.comitente || '—'}</span></div>
+        ${changesHtml}
+      </div>`;
+  });
+
+  previewEl.innerHTML = html;
+}
+
+function closeImportModal() {
+  document.getElementById('modal-import').classList.remove('open');
+  importState = { team: null, toInsert: [], toUpdate: [] };
+}
+
+async function confirmImport() {
+  const { toInsert, toUpdate } = importState;
+  const confirmBtn = document.getElementById('btn-confirm-import');
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = 'Importando...';
+
+  try {
+    if (toInsert.length > 0) {
+      const rows = toInsert.map(clientToRow);
+      const { data: inserted, error } = await supabaseClient.from('clientes').insert(rows).select();
+      if (error) { alert('Error al crear clientes: ' + error.message); return; }
+      inserted.forEach(row => state.clients.push(rowToClient(row)));
+    }
+
+    for (const { existing, incoming } of toUpdate) {
+      const merged = { ...existing, ...incoming };
+      const row = clientToRow(merged);
+      const { error } = await supabaseClient.from('clientes').update(row).eq('id', existing.id);
+      if (error) { alert(`Error al actualizar a ${existing.apellido}, ${existing.nombre}: ` + error.message); return; }
+      Object.assign(existing, incoming);
+    }
+
+    closeImportModal();
+    renderAll();
+    alert('Importación completada.');
+  } finally {
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = 'Confirmar importación';
+  }
+}
+
 // --- Init ---
 (async function init() {
   const user = await requireSession();
