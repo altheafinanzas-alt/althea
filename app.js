@@ -637,7 +637,21 @@ function buildImportPreview(rows) {
     if (!incoming.nombre && !incoming.apellido && !incoming.comitente) return; // fila vacía
 
     const comitente = (incoming.comitente || '').trim();
-    const existing = comitente ? state.clients.find(c => (c.comitente || '').trim() === comitente) : null;
+    let existing = comitente ? state.clients.find(c => (c.comitente || '').trim() === comitente) : null;
+
+    // Sin comitente (ej: cuentas conjuntas "Y/O" sin número propio): emparejar
+    // por equipo + nombre + apellido contra clientes que tampoco tengan comitente,
+    // para no duplicarlos en cada reimportación.
+    if (!existing && !comitente) {
+      const nombreNorm = (incoming.nombre || '').trim().toLowerCase();
+      const apellidoNorm = (incoming.apellido || '').trim().toLowerCase();
+      existing = state.clients.find(c =>
+        c.team === team &&
+        !(c.comitente || '').trim() &&
+        (c.nombre || '').trim().toLowerCase() === nombreNorm &&
+        (c.apellido || '').trim().toLowerCase() === apellidoNorm
+      );
+    }
 
     if (!existing) {
       toInsert.push({ team, ...incoming });
