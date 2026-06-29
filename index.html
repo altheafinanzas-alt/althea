@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro de Clientes | Althea Asesoría Financiera</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green-dark: #1a3a2a;
+    --green-mid: #2d5a3d;
+    --green-light: #3d7a52;
+    --green-pale: #e8f2ec;
+    --violet: #6b4fa0;
+    --violet-light: #8b6fc0;
+    --violet-pale: #f0ebf8;
+    --text-primary: #1a1a1a;
+    --text-secondary: #555;
+    --text-muted: #888;
+    --border: #dde5e0;
+    --bg: #f7faf8;
+    --white: #ffffff;
+    --radius: 8px;
+    --shadow: 0 2px 12px rgba(26,58,42,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--green-dark);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  header .brand {
+    font-family: 'Playfair Display', serif;
+    color: white;
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  header .subtitle {
+    font-family: 'DM Sans', sans-serif;
+    color: rgba(255,255,255,0.55);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  header .header-meta {
+    font-size: 12px;
+    color: rgba(255,255,255,0.45);
+    font-family: 'DM Mono', monospace;
+  }
+
+  header .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .btn-logout {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.25);
+    color: rgba(255,255,255,0.75);
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-logout:hover { border-color: rgba(255,255,255,0.5); color: white; }
+
+  .tabs-bar {
+    background: var(--green-dark);
+    padding: 0 32px;
+    display: flex;
+    gap: 2px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .tab-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.55);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    padding: 12px 20px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.18s;
+    white-space: nowrap;
+  }
+
+  .tab-btn:hover { color: rgba(255,255,255,0.85); }
+
+  .tab-btn.active {
+    color: white;
+    border-bottom: 2px solid #a07de0;
+    font-weight: 500;
+  }
+
+  .main {
+    padding: 28px 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .team-panel { display: none; }
+  .team-panel.active { display: block; }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .panel-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--green-dark);
+  }
+
+  .panel-title span {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-muted);
+    margin-left: 10px;
+  }
+
+  .btn-add {
+    background: var(--green-dark);
+    color: white;
+    border: none;
+    padding: 9px 18px;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s;
+  }
+
+  .btn-add:hover { background: var(--green-mid); }
+
+  .btn-add svg { width: 16px; height: 16px; }
+
+  /* Sub-tabs para equipos */
+  .sub-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .sub-tab-btn {
+    background: white;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 7px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .sub-tab-btn:hover { border-color: var(--violet-light); color: var(--violet); }
+
+  .sub-tab-btn.active {
+    background: var(--violet);
+    border-color: var(--violet);
+    color: white;
+  }
+
+  .sub-tab-btn.add-advisor {
+    border-style: dashed;
+    color: var(--text-muted);
+  }
+
+  .sub-tab-btn.add-advisor:hover {
+    border-color: var(--green-mid);
+    color: var(--green-mid);
+  }
+
+  /* Lista de clientes */
+  .clients-grid {
+    display: grid;
+    gap: 12px;
+  }
+
+  .client-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: var(--shadow);
+  }
+
+  .client-card:hover {
+    border-color: var(--green-mid);
+    box-shadow: 0 4px 16px rgba(26,58,42,0.1);
+  }
+
+  .client-info { flex: 1; }
+
+  .client-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--green-dark);
+    margin-bottom: 4px;
+  }
+
+  .client-meta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .meta-item {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .meta-item strong {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+
+  .client-badges {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .badge-conservador { background: var(--green-pale); color: var(--green-dark); }
+  .badge-moderado { background: #fff8e1; color: #b45309; }
+  .badge-riesgoso { background: #fee2e2; color: #991b1b; }
+  .badge-propio { background: var(--green-pale); color: var(--green-dark); }
+  .badge-reasignado { background: var(--violet-pale); color: var(--violet); }
+  .badge-sin-reasignar { background: #f3f4f6; color: #6b7280; }
+
+  .btn-edit {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    margin-left: 12px;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .btn-edit:hover {
+    border-color: var(--violet-light);
+    color: var(--violet);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  .empty-state .icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+    opacity: 0.4;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 1000;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 16px;
+    overflow-y: auto;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: white;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 600px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    overflow: hidden;
+    margin: auto;
+  }
+
+  .modal-header {
+    background: var(--green-dark);
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    color: white;
+    font-size: 17px;
+    font-weight: 500;
+  }
+
+  .modal-close {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.6);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+
+  .modal-close:hover { color: white; }
+
+  .modal-body {
+    padding: 24px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .form-row.full { grid-template-columns: 1fr; }
+
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+
+  .form-group label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 9px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text-primary);
+    background: white;
+    transition: border-color 0.15s;
+    outline: none;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    border-color: var(--green-mid);
+    box-shadow: 0 0 0 3px rgba(45,90,61,0.08);
+  }
+
+  .form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .form-group input[type="date"] {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+  }
+
+  .form-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 20px 0;
+  }
+
+  .form-section-label {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--violet);
+    margin-bottom: 14px;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .radio-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .radio-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+
+  .radio-option input[type="radio"] { display: none; }
+
+  .radio-pill {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+
+  .radio-option input[type="radio"]:checked + .radio-pill {
+    border-color: var(--green-mid);
+    background: var(--green-pale);
+    color: var(--green-dark);
+    font-weight: 500;
+  }
+
+  .radio-option.violet input[type="radio"]:checked + .radio-pill {
+    border-color: var(--violet);
+    background: var(--violet-pale);
+    color: var(--violet);
+  }
+
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    background: var(--bg);
+  }
+
+  .btn-cancel {
+    background: white;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 9px 20px;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-cancel:hover { border-color: var(--text-muted); }
+
+  .btn-save {
+    background: var(--green-dark);
+    color: white;
+    border: none;
+    padding: 9px 24px;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .btn-save:hover { background: var(--green-mid); }
+
+  /* Add advisor modal */
+  .advisor-modal .form-row { grid-template-columns: 1fr; }
+
+  /* Stats bar */
+  .stats-bar {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .stat-chip {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 100px;
+  }
+
+  .stat-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--green-dark);
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* Search bar */
+  .search-bar {
+    position: relative;
+    margin-bottom: 16px;
+  }
+  .search-bar input {
+    width: 100%;
+    padding: 9px 36px 9px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text-primary);
+    background: white;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .search-bar input:focus {
+    border-color: var(--green-mid);
+    box-shadow: 0 0 0 3px rgba(45,90,61,0.08);
+  }
+  .search-bar input::placeholder { color: var(--text-muted); }
+  .search-bar .search-icon {
+    position: absolute;
+    right: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+  .search-clear {
+    position: absolute;
+    right: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0;
+    display: none;
+  }
+  .search-clear:hover { color: var(--text-primary); }
+
+  /* Checkboxes */
+  .check-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .check-option:hover { border-color: var(--green-mid); }
+  .check-option input[type="checkbox"] { display: none; }
+  .check-box {
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    background: white;
+  }
+  .check-option input[type="checkbox"]:checked + .check-box {
+    background: var(--green-dark);
+    border-color: var(--green-dark);
+  }
+  .check-option input[type="checkbox"]:checked + .check-box::after {
+    content: '';
+    display: block;
+    width: 5px;
+    height: 9px;
+    border: 2px solid white;
+    border-top: none;
+    border-left: none;
+    transform: rotate(45deg) translate(-1px, -1px);
+  }
+  .check-label { font-size: 13px; color: var(--text-primary); font-weight: 500; }
+  .badge-check-si { background: var(--green-pale); color: var(--green-dark); }
+  .badge-check-no { background: #f3f4f6; color: #9ca3af; }
+
+  @media (max-width: 640px) {
+    .main { padding: 20px 16px; }
+    .tabs-bar { padding: 0 16px; overflow-x: auto; }
+    .form-row { grid-template-columns: 1fr; }
+    header { padding: 14px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="brand">Althea</div>
+    <div class="subtitle">Asesoría Financiera Integral · Registro de Clientes</div>
+  </div>
+  <div class="header-right">
+    <div class="header-meta" id="fechaHeader"></div>
+    <div class="header-meta" id="userEmail"></div>
+    <button class="btn-logout" id="btn-logout">Cerrar sesión</button>
+  </div>
+</header>
+
+<div class="tabs-bar">
+  <button class="tab-btn active" onclick="switchTab('mis-clientes')">Mis clientes</button>
+  <button class="tab-btn" onclick="switchTab('equipo-gallo')">Equipo Gallo</button>
+  <button class="tab-btn" onclick="switchTab('equipo-fernanda')">Equipo Fernanda</button>
+  <button class="tab-btn" onclick="switchTab('cuentas-nuevas')">Cuentas nuevas</button>
+</div>
+
+<div class="main">
+
+  <!-- MIS CLIENTES -->
+  <div class="team-panel active" id="panel-mis-clientes">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">Mis clientes <span id="count-mis">0 registrados</span></div>
+      </div>
+      <button class="btn-add" onclick="openModal('mis-clientes')">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg>
+        Nuevo cliente
+      </button>
+    </div>
+
+    <div class="sub-tabs" id="subtabs-mis">
+      <button class="sub-tab-btn active" data-team="mis" data-sub="propios" onclick="switchMisSub(this)">Propios</button>
+      <button class="sub-tab-btn" data-team="mis" data-sub="reasignaciones" onclick="switchMisSub(this)">Reasignaciones</button>
+    </div>
+
+    <div class="search-bar">
+      <input type="text" id="search-mis-clientes" placeholder="Buscar por nombre, apellido o comitente..." oninput="onSearch('mis-clientes', this.value)">
+      <button class="search-clear" id="clear-mis-clientes" onclick="clearSearch('mis-clientes')">✕</button>
+      <svg class="search-icon" id="icon-mis-clientes" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4"/><path d="M10.5 10.5l3 3"/></svg>
+    </div>
+    <div class="stats-bar" id="stats-mis-clientes"></div>
+    <div class="clients-grid" id="list-mis-clientes">
+      <div class="empty-state">
+        <div class="icon">📋</div>
+        <div>Aún no hay clientes registrados.</div>
+        <div style="margin-top:6px; font-size:13px;">Hacé clic en "Nuevo cliente" para agregar el primero.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EQUIPO GALLO -->
+  <div class="team-panel" id="panel-equipo-gallo">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">Equipo Gallo</div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn-add" style="background:var(--violet);" onclick="openAddAdvisorModal('gallo')">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg>
+          Sumar asesor
+        </button>
+        <button class="btn-add" onclick="openModal('equipo-gallo')">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg>
+          Nuevo cliente
+        </button>
+      </div>
+    </div>
+
+    <div class="sub-tabs" id="subtabs-gallo">
+      <button class="sub-tab-btn active" data-team="gallo" data-advisor="todos" onclick="switchSubTab(this, 'gallo')">Todos</button>
+      <button class="sub-tab-btn" data-team="gallo" data-advisor="Diego" onclick="switchSubTab(this, 'gallo')">Diego Gallo</button>
+      <button class="sub-tab-btn" data-team="gallo" data-advisor="Tiago" onclick="switchSubTab(this, 'gallo')">Tiago</button>
+      <button class="sub-tab-btn" data-team="gallo" data-advisor="Tiago-derivados" onclick="switchSubTab(this, 'gallo')">Tiago — Derivados</button>
+    </div>
+
+    <div class="search-bar">
+      <input type="text" id="search-equipo-gallo" placeholder="Buscar por nombre, apellido o comitente..." oninput="onSearch('equipo-gallo', this.value)">
+      <button class="search-clear" id="clear-equipo-gallo" onclick="clearSearch('equipo-gallo')">✕</button>
+      <svg class="search-icon" id="icon-equipo-gallo" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4"/><path d="M10.5 10.5l3 3"/></svg>
+    </div>
+    <div class="stats-bar" id="stats-equipo-gallo"></div>
+    <div class="clients-grid" id="list-equipo-gallo">
+      <div class="empty-state">
+        <div class="icon">📋</div>
+        <div>Aún no hay clientes registrados para este equipo.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EQUIPO FERNANDA -->
+  <div class="team-panel" id="panel-equipo-fernanda">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">Equipo Fernanda</div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn-add" style="background:var(--violet);" onclick="openAddAdvisorModal('fernanda')">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg>
+          Sumar asesor
+        </button>
+        <button class="btn-add" onclick="openModal('equipo-fernanda')">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg>
+          Nuevo cliente
+        </button>
+      </div>
+    </div>
+
+    <div class="sub-tabs" id="subtabs-fernanda">
+      <button class="sub-tab-btn active" data-team="fernanda" data-advisor="todos" onclick="switchSubTab(this, 'fernanda')">Todos</button>
+      <button class="sub-tab-btn" data-team="fernanda" data-advisor="Fernanda" onclick="switchSubTab(this, 'fernanda')">Fernanda</button>
+    </div>
+
+    <div class="search-bar">
+      <input type="text" id="search-equipo-fernanda" placeholder="Buscar por nombre, apellido o comitente..." oninput="onSearch('equipo-fernanda', this.value)">
+      <button class="search-clear" id="clear-equipo-fernanda" onclick="clearSearch('equipo-fernanda')">✕</button>
+      <svg class="search-icon" id="icon-equipo-fernanda" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4"/><path d="M10.5 10.5l3 3"/></svg>
+    </div>
+    <div class="stats-bar" id="stats-equipo-fernanda"></div>
+    <div class="clients-grid" id="list-equipo-fernanda">
+      <div class="empty-state">
+        <div class="icon">📋</div>
+        <div>Aún no hay clientes registrados para este equipo.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CUENTAS NUEVAS -->
+  <div class="team-panel" id="panel-cuentas-nuevas">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">Cuentas nuevas <span id="count-nuevas" style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:400;color:var(--text-muted);margin-left:10px;"></span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:12px;color:var(--text-muted);">Período:</span>
+        <select id="nuevas-period" onchange="renderNuevas()" style="font-size:13px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;color:var(--text-primary);background:white;cursor:pointer;">
+          <option value="1">Último mes</option>
+          <option value="2" selected>Últimos 2 meses</option>
+          <option value="3">Últimos 3 meses</option>
+          <option value="6">Últimos 6 meses</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="sub-tabs" id="subtabs-nuevas">
+      <button class="sub-tab-btn active" data-eq="todos" onclick="switchNuevasSub(this)">Todos</button>
+      <button class="sub-tab-btn" data-eq="mis-clientes" onclick="switchNuevasSub(this)">Mis clientes</button>
+      <button class="sub-tab-btn" data-eq="equipo-gallo" onclick="switchNuevasSub(this)">Equipo Gallo</button>
+      <button class="sub-tab-btn" data-eq="equipo-fernanda" onclick="switchNuevasSub(this)">Equipo Fernanda</button>
+    </div>
+
+    <div class="stats-bar" id="stats-cuentas-nuevas"></div>
+    <div class="clients-grid" id="list-cuentas-nuevas"></div>
+  </div>
+
+
+
+<!-- MODAL NUEVO CLIENTE -->
+<div class="modal-overlay" id="modal-cliente">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title-text">Nuevo cliente</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="form-section-label">Datos identificatorios</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nombre</label>
+          <input type="text" id="field-nombre" placeholder="Ej: María">
+        </div>
+        <div class="form-group">
+          <label>Apellido</label>
+          <input type="text" id="field-apellido" placeholder="Ej: González">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Fecha de apertura de cuenta</label>
+          <input type="date" id="field-fecha">
+        </div>
+        <div class="form-group">
+          <label>Nº de comitente</label>
+          <input type="text" id="field-comitente" placeholder="Ej: 000123456" style="font-family:'DM Mono',monospace;">
+        </div>
+      </div>
+
+      <hr class="form-divider">
+      <div class="form-section-label">Clasificación</div>
+
+      <div class="form-group" style="margin-bottom:16px;" id="group-asesor-original" style="display:none;">
+        <label>Asesor original</label>
+        <input type="text" id="field-asesor-original" readonly style="background:var(--bg);color:var(--text-muted);cursor:default;">
+      </div>
+      <div class="form-group" style="margin-bottom:16px;">
+        <label>Asesor actual</label>
+        <select id="field-asesor">
+          <option value="">— Seleccionar —</option>
+        </select>
+      </div>
+      <div id="group-derivar" style="display:none;margin-bottom:16px;">
+        <button type="button" onclick="derivarCliente()" style="background:var(--violet);color:white;border:none;padding:9px 18px;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          Derivar a otro asesor
+        </button>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px;">
+        <label>Reasignación</label>
+        <div class="radio-group">
+          <label class="radio-option">
+            <input type="radio" name="reasignacion" value="si">
+            <span class="radio-pill">Sí</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="reasignacion" value="no" checked>
+            <span class="radio-pill">No</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px;">
+        <label>Perfil de riesgo</label>
+        <div class="radio-group">
+          <label class="radio-option">
+            <input type="radio" name="perfil" value="conservador">
+            <span class="radio-pill">Conservador</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="perfil" value="moderado">
+            <span class="radio-pill">Moderado</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="perfil" value="riesgoso">
+            <span class="radio-pill">Riesgoso</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px;">
+        <label>Primera reunión — motivo principal</label>
+        <div class="radio-group">
+          <label class="radio-option violet">
+            <input type="radio" name="reunion" value="liquidez">
+            <span class="radio-pill">Liquidez</span>
+          </label>
+          <label class="radio-option violet">
+            <input type="radio" name="reunion" value="ahorro">
+            <span class="radio-pill">Ahorro</span>
+          </label>
+          <label class="radio-option violet">
+            <input type="radio" name="reunion" value="inversion">
+            <span class="radio-pill">Inversión</span>
+          </label>
+          <label class="radio-option violet">
+            <input type="radio" name="reunion" value="indemnizacion">
+            <span class="radio-pill">Indemnización</span>
+          </label>
+        </div>
+      </div>
+
+      <hr class="form-divider">
+      <div class="form-section-label">Notas</div>
+      <div class="form-group form-row full">
+        <label>Observaciones</label>
+        <textarea id="field-obs" placeholder="Notas sobre el cliente, objetivos, situación patrimonial, próximos pasos..."></textarea>
+      </div>
+
+      <hr class="form-divider">
+      <div class="form-section-label">Credenciales y accesos</div>
+      <div class="form-row" style="grid-template-columns: 1fr 1fr; gap: 16px;">
+        <label class="check-option">
+          <input type="checkbox" id="field-usuario-c">
+          <span class="check-box"></span>
+          <span class="check-label">Usuario / C del cliente</span>
+        </label>
+        <label class="check-option">
+          <input type="checkbox" id="field-c-ordenes">
+          <span class="check-box"></span>
+          <span class="check-label">C Órdenes</span>
+        </label>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveClient()">Guardar cliente</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SUMAR ASESOR -->
+<div class="modal-overlay" id="modal-asesor">
+  <div class="modal advisor-modal" style="max-width:420px;">
+    <div class="modal-header">
+      <div class="modal-title">Sumar asesor al equipo</div>
+      <button class="modal-close" onclick="closeAdvisorModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-section-label">Datos del asesor</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nombre completo</label>
+          <input type="text" id="advisor-nombre" placeholder="Nombre y apellido">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Rol / cargo</label>
+          <input type="text" id="advisor-rol" placeholder="Ej: Asesor junior">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeAdvisorModal()">Cancelar</button>
+      <button class="btn-save" style="background:var(--violet);" onclick="saveAdvisor()">Agregar asesor</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Iniciar sesión | Althea</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green-dark: #1a3a2a;
+    --green-mid: #2d5a3d;
+    --border: #dde5e0;
+    --bg: #f7faf8;
+    --text-secondary: #555;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .login-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(26,58,42,0.08);
+    width: 100%;
+    max-width: 380px;
+    padding: 32px 28px;
+  }
+  .brand {
+    font-family: 'Playfair Display', serif;
+    color: var(--green-dark);
+    font-size: 24px;
+    font-weight: 500;
+    margin-bottom: 4px;
+    text-align: center;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin-bottom: 28px;
+  }
+  .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .form-group label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .form-group input {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 14px;
+    outline: none;
+  }
+  .form-group input:focus {
+    border-color: var(--green-mid);
+    box-shadow: 0 0 0 3px rgba(45,90,61,0.08);
+  }
+  .btn-login {
+    width: 100%;
+    background: var(--green-dark);
+    color: white;
+    border: none;
+    padding: 11px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.15s;
+  }
+  .btn-login:hover { background: var(--green-mid); }
+  .btn-login:disabled { opacity: 0.6; cursor: default; }
+  .error-msg {
+    color: #991b1b;
+    font-size: 13px;
+    margin-top: 12px;
+    text-align: center;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="login-card">
+  <div class="brand">Althea</div>
+  <div class="subtitle">Asesoría Financiera Integral · Registro de Clientes</div>
+
+  <form id="login-form">
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="email" autocomplete="username" required>
+    </div>
+    <div class="form-group">
+      <label>Contraseña</label>
+      <input type="password" id="password" autocomplete="current-password" required>
+    </div>
+    <button type="submit" class="btn-login" id="btn-login">Ingresar</button>
+    <div class="error-msg" id="error-msg"></div>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script>
+  // Si ya hay sesión activa, redirigir directo al CRM.
+  supabase.auth.getSession().then(({ data }) => {
+    if (data.session) window.location.href = 'index.html';
+  });
+
+  const form = document.getElementById('login-form');
+  const btn = document.getElementById('btn-login');
+  const errorEl = document.getElementById('error-msg');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorEl.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Ingresando...';
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      errorEl.textContent = 'Email o contraseña incorrectos.';
+      errorEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Ingresar';
+      return;
+    }
+
+    window.location.href = 'index.html';
+  });
+</script>
+</body>
+</html>
