@@ -11,6 +11,7 @@ create table if not exists public.profiles (
   asesor_alias text not null,           -- ej: 'Agos', 'Diego', 'Tiago'
   team_acceso text[] not null default '{}', -- ej: '{mis-clientes,equipo-gallo}'
   es_admin boolean not null default false,  -- admin ve todos los equipos
+  asesor_filtro text,                   -- si está seteado, solo ve clientes con ese "asesor" dentro de su team_acceso (ej: 'Tiago')
   created_at timestamptz not null default now()
 );
 
@@ -78,7 +79,13 @@ create policy "clientes_select_por_team"
     exists (
       select 1 from public.profiles p
       where p.id = auth.uid()
-        and (p.es_admin or clientes.team = any(p.team_acceso))
+        and (
+          p.es_admin
+          or (
+            clientes.team = any(p.team_acceso)
+            and (p.asesor_filtro is null or clientes.asesor = p.asesor_filtro)
+          )
+        )
     )
   );
 
@@ -88,7 +95,13 @@ create policy "clientes_insert_por_team"
     exists (
       select 1 from public.profiles p
       where p.id = auth.uid()
-        and (p.es_admin or clientes.team = any(p.team_acceso))
+        and (
+          p.es_admin
+          or (
+            clientes.team = any(p.team_acceso)
+            and (p.asesor_filtro is null or clientes.asesor = p.asesor_filtro)
+          )
+        )
     )
   );
 
@@ -98,7 +111,13 @@ create policy "clientes_update_por_team"
     exists (
       select 1 from public.profiles p
       where p.id = auth.uid()
-        and (p.es_admin or clientes.team = any(p.team_acceso))
+        and (
+          p.es_admin
+          or (
+            clientes.team = any(p.team_acceso)
+            and (p.asesor_filtro is null or clientes.asesor = p.asesor_filtro)
+          )
+        )
     )
   );
 
