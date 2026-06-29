@@ -21,11 +21,11 @@ open(my $out, '>', $ARGV[1]) or die "cannot open $ARGV[1]: $!";
 for my $obj (@objects) {
     my %row;
     # string fields: "key": "value" (value may be empty, may contain escaped quotes)
-    while ($obj =~ /"([a-zA-Z]+)":\s*"((?:[^"\\]|\\.)*)"/g) {
+    while ($obj =~ /"([a-zA-Z_]+)":\s*"((?:[^"\\]|\\.)*)"/g) {
         $row{$1} = $2;
     }
     # boolean fields: "key": true|false
-    while ($obj =~ /"([a-zA-Z]+)":\s*(true|false)/g) {
+    while ($obj =~ /"([a-zA-Z_]+)":\s*(true|false)/g) {
         $row{$1} = $2;
     }
     my @vals;
