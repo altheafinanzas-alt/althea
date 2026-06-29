@@ -3,7 +3,7 @@
 let CURRENT_USER = null;
 
 async function requireSession() {
-  const { data } = await supabase.auth.getSession();
+  const { data } = await supabaseClient.auth.getSession();
   if (!data.session) {
     window.location.href = 'login.html';
     return null;
@@ -12,7 +12,7 @@ async function requireSession() {
 }
 
 document.getElementById('btn-logout').addEventListener('click', async () => {
-  await supabase.auth.signOut();
+  await supabaseClient.auth.signOut();
   window.location.href = 'login.html';
 });
 
@@ -78,7 +78,7 @@ function clientToRow(c) {
 }
 
 async function loadClients() {
-  const { data, error } = await supabase.from('clientes').select('*');
+  const { data, error } = await supabaseClient.from('clientes').select('*');
   if (error) {
     alert('Error cargando clientes: ' + error.message);
     return;
@@ -87,7 +87,7 @@ async function loadClients() {
 }
 
 async function loadAdvisors() {
-  const { data, error } = await supabase.from('advisors').select('*');
+  const { data, error } = await supabaseClient.from('advisors').select('*');
   if (error) {
     alert('Error cargando asesores: ' + error.message);
     return;
@@ -224,7 +224,7 @@ async function derivarCliente() {
   const nuevo = advisors.length === 1 ? advisors[0] : prompt('Derivar a:\n' + advisors.map((a,i)=>`${i+1}. ${a}`).join('\n') + '\n\nEscribí el nombre exacto:');
   if (!nuevo || !advisors.includes(nuevo)) { alert('Asesor no válido.'); return; }
 
-  const { error } = await supabase.from('clientes')
+  const { error } = await supabaseClient.from('clientes')
     .update({ asesor: nuevo, derivado: true })
     .eq('id', c.id);
   if (error) { alert('Error al derivar: ' + error.message); return; }
@@ -490,12 +490,12 @@ async function saveClient() {
   const row = clientToRow(data);
 
   if (state.editingId) {
-    const { error } = await supabase.from('clientes').update(row).eq('id', state.editingId);
+    const { error } = await supabaseClient.from('clientes').update(row).eq('id', state.editingId);
     if (error) { alert('Error al guardar: ' + error.message); return; }
     const idx = state.clients.findIndex(c => c.id === state.editingId);
     if (idx !== -1) state.clients[idx] = { ...data, id: state.editingId };
   } else {
-    const { data: inserted, error } = await supabase.from('clientes').insert(row).select().single();
+    const { data: inserted, error } = await supabaseClient.from('clientes').insert(row).select().single();
     if (error) { alert('Error al guardar: ' + error.message); return; }
     state.clients.push(rowToClient(inserted));
   }
@@ -523,7 +523,7 @@ async function saveAdvisor() {
   const teamKey = 'equipo-' + state.addAdvisorTeam;
 
   if (!state.advisors[teamKey].includes(nombre)) {
-    const { error } = await supabase.from('advisors').insert({ team: teamKey, nombre, rol: rol || null });
+    const { error } = await supabaseClient.from('advisors').insert({ team: teamKey, nombre, rol: rol || null });
     if (error) { alert('Error al agregar asesor: ' + error.message); return; }
     state.advisors[teamKey].push(nombre);
     updateSubTabs();
