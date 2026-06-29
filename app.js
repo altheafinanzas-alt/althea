@@ -564,7 +564,8 @@ function exportTeamCsv(team) {
     return row;
   });
 
-  const csv = Papa.unparse({ fields: CSV_COLUMNS.map(c => c.header), data: rows });
+  // Excel/Sheets en español esperan ";" como separador de CSV, no ",".
+  const csv = Papa.unparse({ fields: CSV_COLUMNS.map(c => c.header), data: rows }, { delimiter: ';' });
   const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
