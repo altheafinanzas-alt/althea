@@ -11,6 +11,37 @@ async function requireSession() {
   return data.session.user;
 }
 
+async function loadOwnProfile(userId) {
+  const { data, error } = await supabaseClient.from('profiles').select('*').eq('id', userId).maybeSingle();
+  if (error || !data) return null;
+  return data;
+}
+
+// Oculta del menú las pestañas de equipos a los que el usuario no tiene
+// acceso (según profiles.team_acceso), y activa la primera disponible.
+function applyAccessRestrictions(profile) {
+  if (!profile || profile.es_admin) return;
+
+  const allowed = profile.team_acceso || [];
+  const allTeams = ['mis-clientes', 'equipo-gallo', 'equipo-fernanda'];
+  const hiddenTeams = allTeams.filter(t => !allowed.includes(t));
+
+  hiddenTeams.forEach(team => {
+    const btn = document.querySelector(`.tab-btn[data-team="${team}"]`);
+    if (btn) btn.style.display = 'none';
+  });
+
+  // "Cuentas nuevas" es una vista cruzada de equipos: solo tiene sentido
+  // para cuentas con acceso a más de un equipo (o admins).
+  if (allowed.length <= 1) {
+    const nuevasBtn = document.querySelector('.tab-btn[data-team="cuentas-nuevas"]');
+    if (nuevasBtn) nuevasBtn.style.display = 'none';
+  }
+
+  const firstAllowed = allTeams.find(t => allowed.includes(t));
+  if (firstAllowed) switchTab(firstAllowed);
+}
+
 document.getElementById('btn-logout').addEventListener('click', async () => {
   await supabaseClient.auth.signOut();
   window.location.href = 'login.html';
@@ -104,7 +135,8 @@ function switchTab(team) {
   state.currentTeam = team;
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.team-panel').forEach(p => p.classList.remove('active'));
-  event.target.classList.add('active');
+  const btn = document.querySelector(`.tab-btn[data-team="${team}"]`);
+  if (btn) btn.classList.add('active');
   document.getElementById('panel-' + team).classList.add('active');
   if (team === 'cuentas-nuevas') renderNuevas(); else renderAll();
 }
@@ -767,6 +799,8 @@ async function confirmImport() {
   if (!user) return;
   document.getElementById('userEmail').textContent = user.email;
 
+  const profile = await loadOwnProfile(user.id);
   await Promise.all([loadClients(), loadAdvisors()]);
   renderAll();
+  applyAccessRestrictions(profile);
 })();
